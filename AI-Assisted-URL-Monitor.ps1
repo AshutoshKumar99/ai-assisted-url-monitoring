@@ -11,6 +11,7 @@ Purpose:
 ⚠️ NOTE:
 This is a generic template.
 All URLs, server names, and tokens are placeholders.
+Secrets must be provided via environment variables.
 #>
 
 # ================= CONFIG =================
@@ -34,8 +35,12 @@ if (-not $OPENAI_API_KEY) {
     exit
 }
 
-# Teams Webhook (REPLACE WITH YOUR OWN)
-$TeamsWebhookUrl = "<REPLACE_WITH_TEAMS_WEBHOOK_URL>"
+# Teams Webhook (must be set as ENV variable)
+$TeamsWebhookUrl = $env:TEAMS_WEBHOOK_URL
+if (-not $TeamsWebhookUrl) {
+    Write-Host "TEAMS_WEBHOOK_URL not set in environment." -ForegroundColor Red
+    exit
+}
 
 # ================= URL DEFINITIONS =================
 # 👉 Replace with your own URLs
@@ -52,20 +57,20 @@ $DevelopmentUrls = @(
 # ================= URL SUGGESTION HELPER =================
 function Suggest-CorrectUrl {
     param($Item)
+
     try { $u = [uri]$Item.URL } catch { return "N/A" }
 
-    $scheme = ($Item.Env -eq "PRODUCTION") ? "https" : $u.Scheme
+    $scheme   = ($Item.Env -eq "PRODUCTION") ? "https" : $u.Scheme
     $portPart = $u.IsDefaultPort ? "" : ":$($u.Port)"
+
     return "$scheme://$($u.Host)$portPart/application/"
 }
 
-# ================= AI RCA =================
+# ================= AI RCA (PLACEHOLDER) =================
 function Invoke-AIForDnsFailure {
     param($Item)
 
     Write-Host "AI: DNS / Hostname issue detected for $($Item.Name)" -ForegroundColor Cyan
-
-    # Placeholder AI call logic for public repo
     Write-Host "AI RCA: Possible DNS resolution or hostname configuration issue." -ForegroundColor Magenta
 }
 
