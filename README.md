@@ -106,6 +106,7 @@ The solution follows a structured monitoring workflow:
 ---
 
 ## 📊 Sample Workflow
+<img width="1016" height="158" alt="image" src="https://github.com/user-attachments/assets/893cef7f-e271-4d88-b9ba-0c271ab98db2" />
 
 URL Check → Rule Engine → 
    ├── Known Issue → Report
