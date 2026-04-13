@@ -137,6 +137,6 @@ This is a **generic public version** of the solution.
 ## 👨‍💻 Author
 
 **Ashutosh Kumar**
-DevOps | Cloud | Automation Enthusiast
+
 
 ---
