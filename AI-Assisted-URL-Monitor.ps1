@@ -2,18 +2,19 @@
 ==========================================================
 AI‑ASSISTED URL MONITORING (Public / Generic Version)
 
-🔍 Purpose
+Purpose:
 - Continuous URL‑level monitoring
-- Rule‑based RCA for known issues
+- 🧠 Rule Engine for known, deterministic issues
 - 🤖 AI‑assisted RCA for DNS / hostname failures
-- Console output + daily logging
+- Console output and daily logging
 
-⚠️ NOTE
+AI Model Used (DNS RCA):
+- gpt‑4.1‑mini (OpenAI)
+
+NOTE:
 This is a generic public template.
-All URLs, server names, and tokens are placeholders.
-OpenAI API key must be provided via environment variable.
-
-AI Model Used: gpt‑4.1‑mini
+All URLs and server names are placeholders.
+Secrets must be provided via environment variables.
 ==========================================================
 #>
 
@@ -22,10 +23,10 @@ $SleepInterval      = 1800   # 30 minutes
 $ExpectedKeyword    = "Application Console"
 $ExpectedPathRegex = "/application/?$"
 
-# ✅ OpenAI API key (ENV variable)
+# ✅ OpenAI API key (via ENV variable)
 $OPENAI_API_KEY = $env:OPENAI_API_KEY
 if (-not $OPENAI_API_KEY) {
-    Write-Host "❌ OPENAI_API_KEY is not set in environment." -ForegroundColor Red
+    Write-Host "ERROR: OPENAI_API_KEY is not set in environment." -ForegroundColor Red
     exit
 }
 
@@ -41,11 +42,11 @@ function Suggest-CorrectUrl {
     return "$scheme://$($u.Host)$portPart/application/"
 }
 
-# ================= 🤖 AI HANDLER (REAL CALL) =================
+# ================= 🤖 AI HANDLER (DNS FAILURES ONLY) =================
 function Invoke-AIForDnsFailure {
     param($Item)
 
-    Write-Host "🤖 AI CALL  : Analyzing DNS / hostname issue..." -ForegroundColor Cyan
+    Write-Host "🤖 AI CALL : DNS / hostname resolution issue detected" -ForegroundColor Cyan
 
     $prompt = @"
 A monitoring script detected a DNS or hostname resolution failure.
@@ -55,9 +56,9 @@ Platform    : $($Item.Platform)
 Server Name : $($Item.Name)
 URL         : $($Item.URL)
 
-Explain the likely root cause in 2 short bullet points
+Explain the likely root cause in 2 short points
 and provide one recommended fix.
-Keep the response brief and practical.
+Keep it brief and practical.
 "@
 
     $body = @{
@@ -78,16 +79,16 @@ Keep the response brief and practical.
             } `
             -Body $body
 
-        Write-Host "🧠 AI RCA   :" -ForegroundColor Magenta
+        Write-Host "🤖 AI RCA:" -ForegroundColor Magenta
         Write-Host $response.choices[0].message.content -ForegroundColor Magenta
-        Write-Host "✨ AI MODEL : gpt‑4.1‑mini" -ForegroundColor Green
+        Write-Host "AI Model : gpt-4.1-mini" -ForegroundColor DarkGreen
     }
     catch {
-        Write-Host "❌ AI ERROR : Failed to call OpenAI API" -ForegroundColor Red
+        Write-Host "AI ERROR : OpenAI call failed" -ForegroundColor Red
     }
 }
 
-# ================= RULE ENGINE =================
+# ================= 🧠 RULE ENGINE =================
 function Get-RuleRCA {
     param($Item, $HttpStatus)
 
@@ -136,7 +137,7 @@ while ($true) {
 
     $Results = @()
 
-    Write-Host "=== URL Monitoring cycle started at $(Get-Date) ===" -ForegroundColor Yellow
+    Write-Host "=== URL Monitoring started at $(Get-Date) ===" -ForegroundColor Yellow
 
     foreach ($group in @(
         @{ Items = $ProductionUrls },
@@ -181,8 +182,8 @@ while ($true) {
             if ($status -eq "DOWN") {
                 $rule = Get-RuleRCA $item $httpStatus
                 if ($rule.Hit) {
-                    Write-Host "RCA : $($rule.RCA)" -ForegroundColor Yellow
-                    Write-Host "Fix : $($rule.Fix)" -ForegroundColor Yellow
+                    Write-Host "🧠 RULE ENGINE RCA : $($rule.RCA)" -ForegroundColor Yellow
+                    Write-Host "Fix               : $($rule.Fix)" -ForegroundColor Yellow
                 }
             }
         }
