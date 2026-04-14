@@ -1,24 +1,33 @@
 <#
 ==========================================================
-AI‑Assisted URL Monitoring (Generic / Public Version)
+AI‑ASSISTED URL MONITORING (Public / Generic Version)
 
-Purpose:
+🔍 Purpose
 - Continuous URL‑level monitoring
 - Rule‑based RCA for known issues
-- AI‑assisted RCA for DNS / hostname failures (conceptual)
-- Console output and daily logging
+- 🤖 AI‑assisted RCA for DNS / hostname failures
+- Console output + daily logging
 
-NOTE:
-This is a generic template.
-All URLs, server names, and integrations are placeholders.
-Production implementations may add alerting or real AI calls.
+⚠️ NOTE
+This is a generic public template.
+All URLs, server names, and tokens are placeholders.
+OpenAI API key must be provided via environment variable.
+
+AI Model Used: gpt‑4.1‑mini
 ==========================================================
 #>
 
 # ================= GLOBAL CONFIG =================
-$SleepInterval      = 1800
+$SleepInterval      = 1800   # 30 minutes
 $ExpectedKeyword    = "Application Console"
 $ExpectedPathRegex = "/application/?$"
+
+# ✅ OpenAI API key (ENV variable)
+$OPENAI_API_KEY = $env:OPENAI_API_KEY
+if (-not $OPENAI_API_KEY) {
+    Write-Host "❌ OPENAI_API_KEY is not set in environment." -ForegroundColor Red
+    exit
+}
 
 # ================= URL SUGGESTION HELPER =================
 function Suggest-CorrectUrl {
@@ -32,17 +41,50 @@ function Suggest-CorrectUrl {
     return "$scheme://$($u.Host)$portPart/application/"
 }
 
-# ================= AI HANDLER (GENERIC / MOCK) =================
-function Invoke-AIForServerNameIssue {
+# ================= 🤖 AI HANDLER (REAL CALL) =================
+function Invoke-AIForDnsFailure {
     param($Item)
 
-    Write-Host ("{0,-10} : {1}" -f "AI", "DNS / Hostname issue detected") -ForegroundColor Cyan
-    Write-Host ("{0,-10} : {1}" -f "AI RCA",
-        "Hostname could not be resolved. This usually indicates a DNS mismatch or incorrect server name.") `
-        -ForegroundColor Magenta
-    Write-Host ("{0,-10} : {1}" -f "AI NOTE",
-        "In production, this step can leverage an AI model for detailed RCA.") `
-        -ForegroundColor DarkGray
+    Write-Host "🤖 AI CALL  : Analyzing DNS / hostname issue..." -ForegroundColor Cyan
+
+    $prompt = @"
+A monitoring script detected a DNS or hostname resolution failure.
+
+Environment : $($Item.Env)
+Platform    : $($Item.Platform)
+Server Name : $($Item.Name)
+URL         : $($Item.URL)
+
+Explain the likely root cause in 2 short bullet points
+and provide one recommended fix.
+Keep the response brief and practical.
+"@
+
+    $body = @{
+        model = "gpt-4.1-mini"
+        messages = @(
+            @{ role = "user"; content = $prompt }
+        )
+        temperature = 0
+    } | ConvertTo-Json -Depth 4
+
+    try {
+        $response = Invoke-RestMethod `
+            -Uri "https://api.openai.com/v1/chat/completions" `
+            -Method POST `
+            -Headers @{
+                "Authorization" = "Bearer $OPENAI_API_KEY"
+                "Content-Type"  = "application/json"
+            } `
+            -Body $body
+
+        Write-Host "🧠 AI RCA   :" -ForegroundColor Magenta
+        Write-Host $response.choices[0].message.content -ForegroundColor Magenta
+        Write-Host "✨ AI MODEL : gpt‑4.1‑mini" -ForegroundColor Green
+    }
+    catch {
+        Write-Host "❌ AI ERROR : Failed to call OpenAI API" -ForegroundColor Red
+    }
 }
 
 # ================= RULE ENGINE =================
@@ -94,7 +136,7 @@ while ($true) {
 
     $Results = @()
 
-    Write-Host "=== URL Monitoring started at $(Get-Date) ===" -ForegroundColor Yellow
+    Write-Host "=== URL Monitoring cycle started at $(Get-Date) ===" -ForegroundColor Yellow
 
     foreach ($group in @(
         @{ Items = $ProductionUrls },
@@ -132,7 +174,7 @@ while ($true) {
             }
 
             if ($dnsFailure) {
-                Invoke-AIForServerNameIssue $item
+                Invoke-AIForDnsFailure $item
                 continue
             }
 
