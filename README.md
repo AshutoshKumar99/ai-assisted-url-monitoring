@@ -1,142 +1,94 @@
-# 🚀 AI-Assisted URL Monitoring (PowerShell)
+🚀 AI-Assisted URL Monitoring (PowerShell)
+📌 Overview
 
-## 📌 Overview
+This project demonstrates a practical URL monitoring solution that combines:
 
-This project demonstrates a **hybrid URL monitoring solution** that combines:
+🧠 Rule-based validation for known issues
+🤖 AI-assisted RCA for DNS / hostname failures
+📊 Continuous monitoring with logging
 
-* ✅ Deterministic **rule-based validation**
-* 🤖 **AI-assisted Root Cause Analysis (RCA)** for deeper insights
+The script is designed for real-world team usage, where monitoring is performed regularly, but without over-automation.
 
-The script is designed to run from a **controlled monitoring environment (VDI/server)**, ensuring consistent and reliable results independent of end-user network conditions.
+⚙️ Features
+✅ URL-level availability monitoring
+✅ Content validation (not just HTTP response)
+✅ Rule Engine for:
+HTTP vs HTTPS misuse
+Invalid application path
+404 errors
+✅ AI-assisted RCA for DNS failures (using OpenAI)
+✅ Console output for live monitoring
+✅ Daily log file for tracking & evidence
 
----
+🧠 AI Usage (Selective & Practical)
 
-## ⚙️ Configuration
+AI is used only for DNS / hostname resolution failures, to:
+Explain the root cause
+Suggest actionable fixes
 
-The script requires the following environment variables:
+This ensures:
+⚡ Relevant insights
+💰 Controlled API usage
+🎯 Real value addition
 
-* `OPENAI_API_KEY` → API key for AI-assisted RCA
-* `TEAMS_WEBHOOK_URL` → Microsoft Teams Incoming Webhook URL
+🏗️ How It Works
+Script runs every 30 minutes
+Checks all configured URLs using Invoke-WebRequest
+Validates:
+Page content
+URL structure
+Applies Rule Engine for known issues
+Uses AI (only if DNS failure detected)
+Logs results to a daily file
 
-### 🔧 Setup (PowerShell)
-
-```powershell
+⚙️ Configuration
+🔹 Environment Variable (Required for AI)
 setx OPENAI_API_KEY "your-api-key"
-setx TEAMS_WEBHOOK_URL "your-teams-webhook-url"
-```
 
-> ⚠️ Restart your terminal after setting environment variables.
+⚠️ Restart terminal after setting the variable.
 
----
+📂 URL Configuration (Example)
+$ProductionUrls = @(
+    @{ Platform="WINDOWS"; Env="PRODUCTION"; Name="prod-app-01"; URL="https://prod.example.com/application" }
+)
+▶️ How to Run
+.\URLMonitor.ps1
+📊 Sample Output
 
-## 🏗️ Architecture
+ℹ️ The sample output is for illustration purposes to demonstrate monitoring flow, rule engine behavior, and AI-assisted RCA.
 
-The solution follows a structured monitoring workflow:
+📁 Logging
+Logs are stored in:
+C:\URLMonitoringLogs\
+File format:
+monitor_YYYYMMDD.log
+Captures:
+Environment
+Server name
+Status (UP/DOWN)
 
-1. ⏱️ **Scheduled Execution**
+💡 Design Philosophy
+This solution is intentionally designed to be:
 
-   * Runs every 30 minutes (via Task Scheduler / cron equivalent)
+👨‍💻 Engineer-assisted (not fully automated)
+🔍 Focused on validation & visibility
+⚖️ Balanced between manual monitoring and automation
 
-2. 🌐 **Primary URL Check**
+🎯 Use Cases
+Monitoring admin consoles / internal tools
+Validating application availability
+Detecting configuration issues
+Supporting shift-based monitoring teams
 
-   * Uses `Invoke-WebRequest` for HTTPS probing
+⚠️ Disclaimer
+This is a generic public version
+All URLs and server names are placeholders
+No sensitive or production data is included
 
-3. 🧠 **Rule Engine (Deterministic Checks)**
+🔥 Key Insight
+Bookmarks confirm access.
+This script ensures continuous validation, logging, and RCA support when issues occur.
 
-   * Detects common issues:
-
-     * HTTP vs HTTPS mismatch
-     * Invalid paths (404 errors)
-
-4. 🤖 **AI-Assisted RCA**
-
-   * Triggered only for **DNS / hostname resolution failures**
-   * Uses OpenAI to generate human-readable root cause analysis
-
-5. 📢 **Output & Alerting**
-
-   * Console logs
-   * Daily log file
-   * Microsoft Teams notifications
-
----
-
-## 🎯 Key Features
-
-* 🔍 **URL-level monitoring** (not just service availability)
-* 📄 **Content validation** beyond HTTP status codes
-* ⚡ **Selective AI usage** (cost-efficient & meaningful)
-* 🌍 **Environment-independent results**
-* 🔔 **Real-time alerting via Teams**
-
----
-
-## 💡 Use Cases
-
-* Monitoring:
-
-  * Admin portals
-  * Web consoles
-  * Internal tools
-
-* Quickly identifying:
-
-  * Real outages vs misconfigurations
-  * DNS issues with AI-backed explanations
-
-* Reducing:
-
-  * False alerts
-  * Manual RCA effort
-
----
-
-## ▶️ How to Run
-
-1. Clone the repository
-2. Set environment variables (as shown above)
-3. Run the script:
-
-```powershell
-.\your-script-name.ps1
-```
-
-4. (Optional) Schedule using **Windows Task Scheduler** for automated monitoring
-
----
-
-## 📊 Sample Workflow
-<img width="1016" height="158" alt="image" src="https://github.com/user-attachments/assets/893cef7f-e271-4d88-b9ba-0c271ab98db2" />
-
-URL Check → Rule Engine → 
-   ├── Known Issue → Report
-   └── Unknown/DNS Issue → AI RCA → Report
-```
-
----
-
-## ⚠️ Disclaimer
-
-This is a **generic public version** of the solution.
-
-* All URLs, hostnames, and integrations are **placeholders**
-* No sensitive or production data is included
-* AI responses may vary and should be reviewed before critical decisions
-
----
-
-## 🔮 Future Enhancements
-
-* Email/SNS alert integration
-* Dashboard (Grafana / Web UI)
-* Multi-region monitoring support
-* Config-driven URL management (JSON/YAML)
-
----
-
-## 👨‍💻 Author
-
-**Ashutosh Kumar**
-
-
----
+👨‍💻 Author
+Ashutosh Kumar
+DevOps | Cloud | Automation Enthusiast
